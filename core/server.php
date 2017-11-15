@@ -10,11 +10,12 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 header('Content-Type: text/html; charset=utf-8');
 
-header('Access-Control-Allow-Origin: https://hyper-script.ru');
+header('Access-Control-Allow-Origin: https://espanarusa.bitrix24.ru');
 header('Access-Control-Allow-Methods: POST');
 //header('Access-Control-Max-Age: 10000');
 
-if (!($domain = $_GET['id'] ?: $_POST['id'])) throw new HttpException('Can`t find domain');
+//if (!($domain = $_GET['id'] ?: $_POST['id'])) throw new HttpException('Can`t find domain');
+$domain = 'espanarusa';
 
 $file = __DIR__ . '/../data/' . $domain . '/' . basename($_SERVER['SCRIPT_FILENAME'], '.php') . '.json';
 

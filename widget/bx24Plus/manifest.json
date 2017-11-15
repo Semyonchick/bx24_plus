@@ -6,7 +6,7 @@
   "content_scripts": [
     {
       "js": [
-        "hyperPlus.user.js"
+        "bx24Plus.user.js"
       ],
       "matches": [
         "https://*.bitrix24.ru/*"
@@ -15,8 +15,8 @@
       "run_at": "document_end"
     }
   ],
-  "description": "Система расширений для сервиса HyperScript",
-  "name": "HyperPlus",
+  "description": "Система расширений для CRM Bitrix24",
+  "name": "Bx24Plus",
   "permissions": [
     "http://*/*",
     "unlimitedStorage"

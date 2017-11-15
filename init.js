@@ -1,7 +1,7 @@
 requirejs.config({
-    baseUrl: 'https://smartsam.ru/hyper_plus/lib'
+    baseUrl: 'https://smartsam.ru/bx24_plus/lib'
 });
 
-requirejs([]);
+requirejs(['mailchimp']);
 
-console.log('hyper_plus init');
+console.log('bx24_plus init');
