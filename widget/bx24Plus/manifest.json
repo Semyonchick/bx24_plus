@@ -1,0 +1,25 @@
+{
+  "background": {
+    "page": "background.html"
+  },
+  "manifest_version": 2,
+  "content_scripts": [
+    {
+      "js": [
+        "hyperPlus.user.js"
+      ],
+      "matches": [
+        "https://*.bitrix24.ru/*"
+      ],
+      "all_frames": true,
+      "run_at": "document_end"
+    }
+  ],
+  "description": "Система расширений для сервиса HyperScript",
+  "name": "HyperPlus",
+  "permissions": [
+    "http://*/*",
+    "unlimitedStorage"
+  ],
+  "version": "1.0.0"
+}
