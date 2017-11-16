@@ -19,11 +19,33 @@ require_once __DIR__ . '/../core/server.php';
 $result = [];
 
 $mc = new Mailchimp('544989de47041bba5b5552e0310edac4-us14');
-$result = $mc->request('lists', [
-    'fields' => 'lists.id,lists.name,lists.stats.member_count',
-//    'offset' => 10,
-    'count' => 50
-]);
+
+if ($_POST['type'] == 'subscribed') {
+    $result = $mc->request('lists/' . $_POST['listId'] . '/members/' . md5($_POST['email']), [
+        'email_address' => $_POST['email'],
+        'email_type' => 'html',
+        'status' => 'subscribed',
+        'merge_fields' => !empty($_POST['fields']) ? $_POST['fields'] : ['FNAME' => ''],
+    ], 'PUT')->toArray();
+} else {
+    $result = $mc->request('lists', [
+        'fields' => 'lists.id,lists.name,lists.stats.member_count',
+        'count' => 50
+    ])->toArray();
+    if ($_POST['email']) {
+        $list = $mc->request('lists', [
+            'fields' => 'lists.id,lists.name,lists.stats.member_count',
+            'email' => $_POST['email'],
+            'count' => 50
+        ])->toArray();
+        $result = json_decode(json_encode($result), 1);
+        $list = json_decode(json_encode($list), 1);
+        foreach ($list as $row) {
+            foreach ($result as $key => $value)
+                if ($value['id'] == $row['id']) $result[$key]['exist'] = true;
+        }
+    }
+}
 
 
 header('Content-Type: application/json');
