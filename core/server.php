@@ -6,6 +6,8 @@
  * Time: 22:20
  */
 
+Define('YII_DEBUG', 0);
+use linslin\yii2\curl\Curl;
 require_once __DIR__ . '/vendor/autoload.php';
 
 error_reporting(E_ALL);
@@ -45,4 +47,48 @@ function p($data, $return = false)
     else
         if ($return) return '<pre>' . print_r($data, 1) . '</pre>';
         else echo '<pre>' . print_r($data, 1) . '</pre>';
+    return false;
+}
+
+$bxLog = [];
+function bx($method, $get = null, $post = null) {
+    global $bxLog;
+
+    $cl = count($bxLog);
+    if ($cl > 2 && ($spend = microtime(true) - $bxLog[$cl - 2]) && $spend < 1) {
+        usleep ((1 - $spend) * 1000000);
+        return $this->bx($method, $get, $post);
+    }
+
+//    if(!$get) $get = [];
+//    $get['auth'] = $_REQUEST['auth']['member_id'];
+//    $url = $_REQUEST['auth']['client_endpoint'];
+    $url = 'https://espanarusa.bitrix24.ru/rest/49/yzmwq2ftvomdnpre/';
+    $url .= $method . '/';
+    if($get) $url .= '?' . http_build_query($get);
+
+    try {
+        $curl = new Curl();
+        if ($post) {
+            $curl->setPostParams($post);
+            $result = $curl->post($this->url . '' . $method . '/', true);
+        } else {
+            $result = $curl->get($url);
+        }
+
+        $result = json_decode($result, 1);
+    } catch (Exception $e){
+        sleep(1);
+        return $this->bx($method, $get, $post);
+    }
+
+    if (!isset($result['result'])) {
+        print_r($url);
+        print_r($post);
+        throw new Exception(print_r($result, 1));
+    }
+
+    $bxLog[] = microtime(true);
+
+    return $result['result'];
 }
