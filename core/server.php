@@ -10,7 +10,7 @@ Define('YII_DEBUG', 0);
 use linslin\yii2\curl\Curl;
 require_once __DIR__ . '/vendor/autoload.php';
 
-error_reporting(E_ALL);
+error_reporting(E_ALL & ~E_NOTICE);
 ini_set('display_errors', true);
 ini_set('display_startup_errors', true);
 ini_set('html_errors', true);

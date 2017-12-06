@@ -82,6 +82,36 @@ class MegaplanController extends Controller
 //        var_dump($this->bx('crm.productrow.fields'));
     }
 
+    public function actionDocuments()
+    {
+        $list = $this->bx('lists.element.get', [
+            'IBLOCK_TYPE_ID' => 'lists',
+            'IBLOCK_ID' => 41,
+//            'ELEMENT_ORDER' => ['ID' => 'DESC'],
+//            'ELEMENT_PARAMS' => ['nPageSize'=>3,'iNumPage'=>3],
+        ]);
+
+
+        foreach ($list as $row) if (count($row['PROPERTY_205']) == 1) {
+            foreach ($row['PROPERTY_205'] as $value)
+                if (preg_match('#^(\w{1,2}_)?(\d+)$#i', $value, $match)) {
+                    if ($match[1] == 'D_') {
+                        var_dump($match[2]);
+                        $deal = $this->bx('crm.' . array_search($match[1], $this->bxTypesMap) . '.get', ['id' => $match[2]]);
+                        if ($deal['CONTACT_ID']) {
+                            $row['PROPERTY_205'][] = ['C_' . $deal['CONTACT_ID']];
+                            $this->bx('lists.element.update', [], [
+                                'IBLOCK_TYPE_ID' => 'lists',
+                                'IBLOCK_ID' => 41,
+                                'ELEMENT_ID' => $row['ID'],
+                                'FIELDS' => $row,
+                            ]);
+                        }
+                    }
+                }
+        }
+    }
+
     public function actionCsv()
     {
         $remember = \Yii::$app->cache->get('csvCommentHistory');
