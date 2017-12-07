@@ -31,7 +31,7 @@ ini_set('display_errors', true);
 ini_set('display_startup_errors', true);
 ini_set('html_errors', true);
 
-header('Content-Type: text/html; charset=utf-8');
+header('Content-Type: text/plain; charset=utf-8');
 
 header('Access-Control-Allow-Origin: https://espanarusa.bitrix24.ru');
 header('Access-Control-Allow-Methods: POST');
