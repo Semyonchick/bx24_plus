@@ -26,7 +26,7 @@ function bx_prices_update($type, $id)
         $update = [];
 
         // сумма
-        $update['UF_CRM_1512623740219'] = $model['OPPORTUNITY'];
+        $update['UF_CRM_1512623740219'] = (float)$model['OPPORTUNITY'];
 
         // задолжность
         $update['UF_CRM_1511504908812'] = $model['OPPORTUNITY'] - (float)$model['UF_CRM_1511504826340'];
@@ -39,9 +39,10 @@ function bx_prices_update($type, $id)
         // затраты
         $pay = $update['UF_CRM_1511504852012'] = 0;
         foreach ($dealLists as $deal) {
+            $date = isset($deal['PROPERTY_281']) ? current($deal['PROPERTY_281']) : false;
             if (!empty($deal['PROPERTY_211']) && in_array($id, $deal['PROPERTY_211'])) {
-                $update['UF_CRM_1511504852012'] += preg_match('#\d+#', current($deal['PROPERTY_189']), $match) ? $match[0] : 0;
-                if(isset($deal['PROPERTY_279'])) $pay += preg_match('#\d+#', current($deal['PROPERTY_279']), $match) ? $match[0] : 0;
+                $update['UF_CRM_1511504852012'] += \app\components\Course::parseTo(current($deal['PROPERTY_189']), $model['CURRENCY_ID'], $date);
+                if (isset($deal['PROPERTY_279'])) $pay += \app\components\Course::parseTo(current($deal['PROPERTY_279']), $model['CURRENCY_ID'], $date);
             }
         }
 
@@ -55,10 +56,10 @@ function bx_prices_update($type, $id)
             $update[$key] = is_numeric($value) ? $value . '|' . $model['CURRENCY_ID'] : $value;
         }
 
-        if (count(array_diff($update, $model)))
-            $c->add('crm.' . $type . '.update', ['id' => $id, 'fields' => $update, 'params' => ['REGISTER_SONET_EVENT' => 'N']]);
-
-//        var_dump($model);
+        if (count(array_diff($update, $model))) {
+            $save = $c->bx('crm.' . $type . '.update', [], ['id' => $id, 'fields' => $update, 'params' => ['REGISTER_SONET_EVENT' => 'N']]);
+            mail('semyonchick@gmail.com', 'update deal', print_r([$_REQUEST, array_diff($update, $model), $save], 1));
+        }
     }
 }
 
@@ -138,8 +139,7 @@ if (isset($_REQUEST['event']) && $_REQUEST['event'] == 'ONCRMDEALUPDATE') {
 
 }
 
-
-//    mail('semyonchick@gmail.com', __FILE__, print_r([$row, $params], 1));
+//mail('semyonchick@gmail.com', __FILE__, print_r($_REQUEST, 1));
 
 header('Content-Type: application/json');
 echo json_encode([
