@@ -18,9 +18,10 @@ $result = [];
 require_once __DIR__ . '/../core/commands/MegaplanController.php';
 $c = new \app\commands\MegaplanController('list', false);
 
-function bx_prices_update($type, $id)
+function bx_deal_prices_update($type, $id)
 {
     global $c;
+
     $model = $c->bx('crm.' . $type . '.get', ['id' => $id]);
     if ($model) {
         $update = [];
@@ -58,13 +59,57 @@ function bx_prices_update($type, $id)
 
         if (count(array_diff($update, $model))) {
             $save = $c->bx('crm.' . $type . '.update', [], ['id' => $id, 'fields' => $update, 'params' => ['REGISTER_SONET_EVENT' => 'N']]);
-            mail('semyonchick@gmail.com', 'update deal', print_r([$_REQUEST, array_diff($update, $model), $save], 1));
+//            mail('semyonchick@gmail.com', 'update deal', print_r([$_REQUEST, array_diff($update, $model), $save], 1));
         }
     }
 }
 
+function bx_contact_price_update($type, $id)
+{
+    global $c;
+
+    $key = $type == 'company' ? 'UF_CRM_1512569993082' : 'UF_CRM_1512570963680';
+    $model = $c->bx('crm.' . $type . '.get', ['id' => $id]);
+    if ($model) {
+        // затраты
+        $update[$key] = 0;
+        $currency = false;
+
+        $lists = $c->bx('lists.element.get', [
+            'IBLOCK_TYPE_ID' => 'lists',
+            'IBLOCK_ID' => 39,
+        ]);
+        foreach ($lists as $list) {
+            if (!empty($list['PROPERTY_213']) && in_array($c->bxTypesMap[$type] . $id, $list['PROPERTY_213'])) {
+                $update[$key] += preg_match('#\d+#', current($list['PROPERTY_189']), $match) ? $match[0] : 0;
+                if (isset($list['PROPERTY_279'])) $update[$key] -= preg_match('#\d+#', current($list['PROPERTY_279']), $match) ? $match[0] : 0;
+                if (!$currency) $currency = end(explode('|', current($list['PROPERTY_189'])));
+            }
+        }
+
+        $lists = $c->bx('lists.element.get', [
+            'IBLOCK_TYPE_ID' => 'lists',
+            'IBLOCK_ID' => 69,
+        ]);
+        foreach ($lists as $list) {
+            if (!empty($list['PROPERTY_287']) && in_array($id, $list['PROPERTY_287'])) {
+                $update[$key] += preg_match('#\d+#', current($list['PROPERTY_285']), $match) ? $match[0] : 0;
+                if (isset($list['PROPERTY_291'])) $update[$key] -= preg_match('#\d+#', current($list['PROPERTY_291']), $match) ? $match[0] : 0;
+                if (!$currency) $currency = end(explode('|', current($list['PROPERTY_285'])));
+            }
+        }
+
+        foreach ($update as $key => $val) {
+            $update[$key] = is_numeric($val) ? $val . '|' . ($currency ?: 'EUR') : $val;
+        }
+
+        if (count(array_diff($update, $model)))
+            $c->add('crm.' . $type . '.update', ['id' => $id, 'fields' => $update, 'params' => ['REGISTER_SONET_EVENT' => 'N']]);
+    }
+}
+
 if (isset($_REQUEST['event']) && $_REQUEST['event'] == 'ONCRMDEALUPDATE') {
-    bx_prices_update('deal', $_REQUEST['data']['FIELDS']['ID']);
+    bx_deal_prices_update('deal', $_REQUEST['data']['FIELDS']['ID']);
 } elseif (!empty($_REQUEST['crm'])) {
     $params = [
         'IBLOCK_TYPE_ID' => 'lists',
@@ -100,39 +145,27 @@ if (isset($_REQUEST['event']) && $_REQUEST['event'] == 'ONCRMDEALUPDATE') {
     foreach ($lists as $row) {
         foreach ($row['PROPERTY_211'] as $value) {
             if (preg_match('#^(\w{1,2}_)?(\d+)$#i', $value, $match)) {
-                bx_prices_update($match[1] ? array_search($match[1], $c->bxTypesMap) : 'deal', $match[2]);
+                bx_deal_prices_update($match[1] ? array_search($match[1], $c->bxTypesMap) : 'deal', $match[2]);
 
             }
         }
+        if (isset($row['PROPERTY_213'])) foreach ($row['PROPERTY_213'] as $value) {
+            if (preg_match('#^(\w{1,2}_)(\d+)$#i', $value, $match)) {
+                bx_contact_price_update(array_search($match[1], $c->bxTypesMap), $match[2]);
+            }
+        }
     }
-    if(isset($row['PROPERTY_213'])) foreach ($row['PROPERTY_213'] as $value) {
-        if (preg_match('#^(\w{1,2}_)?(\d+)$#i', $value, $match)) {
-            $id = $match[2];
-            $type = array_search($match[1], $c->bxTypesMap);
-            $key = $type == 'company' ? 'UF_CRM_1512569993082' : 'UF_CRM_1512570963680';
-            $model = $c->bx('crm.' . $type . '.get', ['id' => $id]);
-            if ($model) {
-                $lists = $c->bx('lists.element.get', [
-                    'IBLOCK_TYPE_ID' => 'lists',
-                    'IBLOCK_ID' => 39,
-                ]);
 
-                // затраты
-                $update[$key] = 0;
-                foreach ($lists as $list) {
-                    if (!empty($list['PROPERTY_213']) && in_array($match[0], $list['PROPERTY_213'])) {
-                        $update[$key] += preg_match('#\d+#', current($list['PROPERTY_189']), $match) ? $match[0] : 0;
-                        $update[$key] -= preg_match('#\d+#', current($list['PROPERTY_279']), $match) ? $match[0] : 0;
-                        if(!$model['CURRENCY_ID']) $model['CURRENCY_ID'] = preg_replace('#[0-9\.]+\|#','', current($list['PROPERTY_189']));
-                    }
-                }
-
-                foreach ($update as $key => $val) {
-                    $update[$key] = is_numeric($val) ? $val . '|' . $model['CURRENCY_ID'] : $val;
-                }
-
-                if (count(array_diff($update, $model)))
-                    $c->add('crm.' . $type . '.update', ['id' => $id, 'fields' => $update, 'params' => ['REGISTER_SONET_EVENT' => 'N']]);
+    $params = [
+        'IBLOCK_TYPE_ID' => 'lists',
+        'IBLOCK_ID' => 69,
+        'ELEMENT_ID' => $_REQUEST['document_id'][2],
+    ];
+    $lists = $c->bx('lists.element.get', $params);
+    foreach ($lists as $row) {
+        if (isset($row['PROPERTY_287'])) foreach ($row['PROPERTY_287'] as $value) {
+            if (preg_match('#^(\w{1,2}_)?(\d+)$#i', $value, $match)) {
+                bx_contact_price_update(array_search($match[1], $c->bxTypesMap) ?: 'contact', $match[2]);
             }
         }
     }
