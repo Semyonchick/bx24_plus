@@ -26,6 +26,9 @@ function bx_prices_update($type, $id)
         $update = [];
 
         // сумма
+        $update['UF_CRM_1512623740219'] = $model['OPPORTUNITY'];
+
+        // задолжность
         $update['UF_CRM_1511504908812'] = $model['OPPORTUNITY'] - (float)$model['UF_CRM_1511504826340'];
 
         $dealLists = $c->bx('lists.element.get', [
@@ -34,15 +37,19 @@ function bx_prices_update($type, $id)
         ]);
 
         // затраты
-        $update['UF_CRM_1511504852012'] = 0;
+        $pay = $update['UF_CRM_1511504852012'] = 0;
         foreach ($dealLists as $deal) {
-            if (!empty($deal['PROPERTY_211']) && in_array('D_' . $id, $deal['PROPERTY_211'])) {
+            if (!empty($deal['PROPERTY_211']) && in_array($id, $deal['PROPERTY_211'])) {
                 $update['UF_CRM_1511504852012'] += preg_match('#\d+#', current($deal['PROPERTY_189']), $match) ? $match[0] : 0;
+                if(isset($deal['PROPERTY_279'])) $pay += preg_match('#\d+#', current($deal['PROPERTY_279']), $match) ? $match[0] : 0;
             }
         }
 
         // остаток по затратам
-        $update['UF_CRM_1511504891151'] = $update['UF_CRM_1511504908812'] - $update['UF_CRM_1511504852012'];
+        $update['UF_CRM_1511504891151'] = $update['UF_CRM_1511504852012'] - $pay;
+
+        // валовая моржа
+        $update['UF_CRM_1512623759507'] = $update['UF_CRM_1512623740219'] - $update['UF_CRM_1511504852012'];
 
         foreach ($update as $key => $value) {
             $update[$key] = is_numeric($value) ? $value . '|' . $model['CURRENCY_ID'] : $value;
@@ -50,15 +57,6 @@ function bx_prices_update($type, $id)
 
         if (count(array_diff($update, $model)))
             $c->add('crm.' . $type . '.update', ['id' => $id, 'fields' => $update, 'params' => ['REGISTER_SONET_EVENT' => 'N']]);
-
-        // аванс
-        $model['UF_CRM_1511504826340'];
-        // сумма
-        $model['UF_CRM_1511504908812'];
-        // затраты
-        $model['UF_CRM_1511504852012'];
-        // остаток по затратам
-        $model['UF_CRM_1511504891151'];
 
 //        var_dump($model);
     }
@@ -106,7 +104,7 @@ if (isset($_REQUEST['event']) && $_REQUEST['event'] == 'ONCRMDEALUPDATE') {
             }
         }
     }
-    foreach ($row['PROPERTY_213'] as $value) {
+    if(isset($row['PROPERTY_213'])) foreach ($row['PROPERTY_213'] as $value) {
         if (preg_match('#^(\w{1,2}_)?(\d+)$#i', $value, $match)) {
             $id = $match[2];
             $type = array_search($match[1], $c->bxTypesMap);
