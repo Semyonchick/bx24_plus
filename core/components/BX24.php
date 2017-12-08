@@ -16,7 +16,7 @@ use yii\helpers\Console;
 class BX24 extends Component
 {
     private $bxLog = [];
-    private $url = false;
+    public $url = false;
 
     public $next = false;
     public $total = false;

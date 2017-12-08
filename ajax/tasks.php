@@ -46,7 +46,7 @@ foreach ([
                 'EMAIL' => $user[0],
                 'EXTRANET' => 'Y',
                 'SONET_GROUP_ID' => [$group],
-                'NAME' => $user[1],
+                'NAME' => $user[1]?:$user[0],
             ]);
             $usersTarget[$user[0]] = $usersTarget[$user[1]] = $targetId;
         }
@@ -62,7 +62,7 @@ foreach ([
             $add = [
                 'UF_AUTO_472428192293' => $row['ID'],
                 'STATUS' => $row['REAL_STATUS'],
-                'DESCRIPTION' => $row['DESCRIPTION'] . PHP_EOL . PHP_EOL . "https://' .$bxSource->domain.'/company/personal/user/{$row['RESPONSIBLE_ID']}/tasks/task/view/{$row['ID']}/",
+                'DESCRIPTION' => $row['DESCRIPTION'] . PHP_EOL . PHP_EOL . "https://{$bxSource->domain}/company/personal/user/{$row['RESPONSIBLE_ID']}/tasks/task/view/{$row['ID']}/",
                 'CREATED_BY' => $getBxUser($row['CREATED_BY']),
                 'RESPONSIBLE_ID' => $getBxUser($row['RESPONSIBLE_ID']),
             ];
