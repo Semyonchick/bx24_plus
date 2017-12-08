@@ -15,8 +15,41 @@ use yii\helpers\Console;
 
 class BX24 extends Component
 {
-    public $bxLog = [];
-    public $url = false;
+    private $bxLog = [];
+    private $url = false;
+
+    public $next = false;
+    public $total = false;
+
+    public function getDomain(){
+        if(preg_match('#\/([^\/]+)\/rest\/(\d+)\/([\d\w]+)\/#', $this->url, $match))
+            return $match[1];
+        return false;
+    }
+
+    public function getUser(){
+        if(preg_match('#\/([^\/]+)\/rest\/(\d+)\/([\d\w]+)\/#', $this->url, $match))
+            return $match[2];
+        return false;
+    }
+
+    public function getKey(){
+        if(preg_match('#\/([^\/]+)\/rest\/(\d+)\/([\d\w]+)\/#', $this->url, $match))
+            return $match[3];
+        return false;
+    }
+
+    public function runWithNext($method, $get = false)
+    {
+        $this->next = false;
+        $this->total = false;
+        $result = [];
+        while ($this->total === false || count($result) < $this->total) {
+            $result = array_merge($result, $this->run($method, $get));
+            if ($this->total === false) $this->total = count($result);
+        }
+        return $result;
+    }
 
     public function run($method, $get = false, $post = false){
         $cl = count($this->bxLog);
@@ -50,6 +83,9 @@ class BX24 extends Component
             print_r($post);
             throw new Exception(print_r($result, 1));
         }
+
+        if ($result['next']) $this->next = $result['next'];
+        if ($result['total']) $this->next = $result['total'];
 
         $this->bxLog[] = microtime(true);
 
