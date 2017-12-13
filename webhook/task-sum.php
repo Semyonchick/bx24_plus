@@ -27,7 +27,6 @@ function sumChildTasks($taskIs, $bx)
 
         $params = [];
         if (count($tasks)) {
-
             $params['UF_AUTO_813593154674'] = $params['UF_AUTO_378796169189'] = 0;
 
             foreach ($tasks as $childTask) {

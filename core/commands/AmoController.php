@@ -9,6 +9,7 @@ namespace app\commands;
 
 use app\components\BX24;
 use yii\console\Controller;
+use yii\helpers\Console;
 
 /**
  * @author Qiang Xue <qiang.xue@gmail.com>
@@ -35,7 +36,7 @@ class AmoController extends Controller
         }
 
         $from = 0;
-        while ($list = $this->getAmo()->lead->apiList(['limit_rows' => 500, 'limit_offset' => $from, 'id' => 17142391])) {
+        while ($list = $this->getAmo()->lead->apiList(['limit_rows' => 500, 'limit_offset' => $from])) {
             foreach ($list as $row) {
                 $result = $bx->run('crm.deal.list', ['filter' => ['ORIGINATOR_ID' => $row['id'], 'ORIGIN_ID' => 'amoCRM'], 'select' => ['UF_*']]);
                 if ($result = $result[0]) {
@@ -51,7 +52,7 @@ class AmoController extends Controller
                         if ($property = array_filter($row['custom_fields'], function ($row) use ($key) {
                             return trim($row['name']) == $key;
                     })) {
-                            $toSave[$code] = current($property)['values'][0]['value'] . '|RUB';
+                            $toSave[$code] = current($property)['values'][0]['value'] . (strpos($code, '_CRM_') ? '|RUB' : '');
                     }
 
                     foreach ([
@@ -72,6 +73,7 @@ class AmoController extends Controller
                     }
 
                     if (array_diff($toSave, $result)) {
+                        Console::output($result['ID']);
                         $bx->run('crm.deal.update', [], [
                             'id' => $result['ID'],
                             'fields' => $toSave
