@@ -1,8 +1,10 @@
-requirejs.config({
-    baseUrl: 'https://smartsam.ru/bx24_plus/lib',
-    urlArgs: "v=20171206-1625"
-});
+if (location.host === 'espanarusa.bitrix24.ru') {
+    requirejs.config({
+        baseUrl: 'https://smartsam.ru/bx24_plus/lib',
+        urlArgs: "v=20171206-1625"
+    });
 
-requirejs(['mailchimp', 'hyperscript', 'lists_sum']);
+    requirejs(['mailchimp', 'hyperscript', 'lists_sum']);
 
-console.log('bx24_plus init');
+    console.log('bx24_plus init');
+}

@@ -20,11 +20,14 @@ class AmoController extends Controller
 {
     private $_amo;
 
-    public function actionIndex()
+    public function actionIndex($thisComments = false)
     {
         $bx = new BX24(['url' => 'https://holding-gel.bitrix24.ru/rest/112/5m56ebgk24ijxt0y/']);
-//        var_dump($this->getAmo()->account->apiCurrent());
-//        die;
+        $amoInfo = $this->getAmo()->account->apiCurrent();
+        $amoUsers = [];
+        foreach ($amoInfo['users'] as $row) {
+            $amoUsers[$row['id']] = trim("{$row['name']} {$row['last_name']}");
+        }
 
         $bxProperties = [];
         foreach ($bx->run('crm.deal.userfield.list') as $row) {
@@ -32,16 +35,23 @@ class AmoController extends Controller
         }
 
         $from = 0;
-        while ($list = $this->getAmo()->lead->apiList(['limit_rows' => 500, 'limit_offset' => $from, 'status' => [16662919, 16662898, 16662877, 16662874, 16662871, 142]])) {
+        while ($list = $this->getAmo()->lead->apiList(['limit_rows' => 500, 'limit_offset' => $from, 'id' => 17142391])) {
             foreach ($list as $row) {
                 $result = $bx->run('crm.deal.list', ['filter' => ['ORIGINATOR_ID' => $row['id'], 'ORIGIN_ID' => 'amoCRM'], 'select' => ['UF_*']]);
                 if ($result = $result[0]) {
-                    $toSave = ['UF_CRM_1512981007275' => date('d.m.Y', $row['date_create'])];
+                    $toSave = [
+//                        'OPPORTUNITY' => $row['price'],
+                        'UF_CRM_1512981007275' => date('d.m.Y', $row['date_create']),
+                    ];
 
-                    if ($property = array_filter($row['custom_fields'], function ($row) {
-                        return $row['name'] == 'Аванс';
+                    foreach ([
+                                 'Стоимость' => 'OPPORTUNITY',
+                                 'Аванс' => 'UF_CRM_1512967601319',
+                             ] as $key => $code)
+                        if ($property = array_filter($row['custom_fields'], function ($row) use ($key) {
+                            return trim($row['name']) == $key;
                     })) {
-                        $toSave['UF_CRM_1512967601319'] = current($property)['values'][0]['value'] . '|RUB';
+                            $toSave[$code] = current($property)['values'][0]['value'] . '|RUB';
                     }
 
                     foreach ([
@@ -62,13 +72,39 @@ class AmoController extends Controller
                     }
 
                     if (array_diff($toSave, $result)) {
-                        var_dump($result['ID']);
                         $bx->run('crm.deal.update', [], [
                             'id' => $result['ID'],
                             'fields' => $toSave
                         ]);
                     }
 
+                    if ($thisComments) {
+                        $comments = [];
+                        $notes = $this->getAmo()->note->apiList(['type' => 'lead', 'element_id' => $row['id']]);
+                        foreach ($notes as $note) {
+                            if (!json_decode($note['text']) && $note['text'] != 'Добавлен новый объект') {
+                                $comments[$note['last_modified']] = $amoUsers[$note['responsible_user_id']] . ' - ' . date('d.m.Y H:i:s', $note['last_modified']) .
+                                    PHP_EOL . $note['text'];
+                            }
+                        }
+
+                        $tasks = $this->getAmo()->task->apiList(['type' => 'lead', 'element_id' => $row['id']]);
+                        foreach ($tasks as $task) {
+                            $comments[$task['last_modified']] = $amoUsers[$task['responsible_user_id']] . ' - ' . date('d.m.Y H:i:s', $task['last_modified']) .
+                                PHP_EOL . trim('Задача: ' . $task['text'] . PHP_EOL . $task['result']['text']);
+                        }
+
+                        ksort($comments);
+                        foreach ($comments as $comment)
+                            $bx->run('crm.livefeedmessage.add', [], [
+                                'fields' => [
+                                    'POST_TITLE' => 'Из амо',
+                                    'MESSAGE' => $comment,
+                                    'ENTITYTYPEID' => 2,
+                                    'ENTITYID' => $result['ID'],
+                                ]
+                            ]);
+                    }
                 }
             }
             $from += count($list);
