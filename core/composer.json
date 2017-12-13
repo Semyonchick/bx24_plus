@@ -3,7 +3,8 @@
         "yiisoft/yii2": "2.0.11.2",
         "zurb/foundation": "^6.3",
         "megaplan/simple_client": "dev-master",
-        "linslin/yii2-curl": "*",
-        "pacely/mailchimp-apiv3": "dev-master"
+        "pacely/mailchimp-apiv3": "dev-master",
+        "dotzero/yii2-amocrm": "^0.2.1",
+        "linslin/yii2-curl": "*"
     }
 }
