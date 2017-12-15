@@ -111,30 +111,29 @@ function bx_contact_price_update($type, $id)
 if (isset($_REQUEST['event']) && $_REQUEST['event'] == 'ONCRMDEALUPDATE') {
     bx_deal_prices_update('deal', $_REQUEST['data']['FIELDS']['ID']);
 } elseif (!empty($_REQUEST['crm'])) {
-    $params = [
+    $lists = $c->bx('lists.element.get', [
         'IBLOCK_TYPE_ID' => 'lists',
         'IBLOCK_ID' => 41,
         'ELEMENT_ID' => $_REQUEST['document_id'][2],
-    ];
-    $lists = $c->bx('lists.element.get', $params);
-    foreach ($lists as $row)
-        foreach ($row['PROPERTY_205'] as $value)
-            if (preg_match('#^(\w{1,2}_)?(\d+)$#i', $value, $match)) {
-                if ($match[1] == 'D_') {
-                    $deal = $c->bx('crm.' . array_search($match[1], $c->bxTypesMap) . '.get', ['id' => $match[2]]);
-                    if ($deal['CONTACT_ID'] || $deal['COMPANY_ID']) {
-                        if ($deal['CONTACT_ID']) $row['PROPERTY_205'][] = ['C_' . $deal['CONTACT_ID']];
-                        if ($deal['COMPANY_ID']) $row['PROPERTY_205'][] = ['CO_' . $deal['COMPANY_ID']];
-                        $c->bx('lists.element.update', [], [
-                            'IBLOCK_TYPE_ID' => 'lists',
-                            'IBLOCK_ID' => 41,
-                            'ELEMENT_ID' => $row['ID'],
-                            'FIELDS' => $row,
-                        ]);
-                    }
+    ]);
+    $row = current($lists);
+    foreach ($row['PROPERTY_205'] as $value)
+        if (preg_match('#^(\w{1,2}_)?(\d+)$#i', $value, $match)) {
+            if ($match[1] == 'D_') {
+                $deal = $c->bx('crm.' . array_search($match[1], $c->bxTypesMap) . '.get', ['id' => $match[2]]);
+                if ($deal['CONTACT_ID'] || $deal['COMPANY_ID']) {
+                    $params['PROPERTY_205'] = $row['PROPERTY_205'];
+                    if ($deal['CONTACT_ID']) $params['PROPERTY_205'][] = ['C_' . $deal['CONTACT_ID']];
+                    if ($deal['COMPANY_ID']) $params['PROPERTY_205'][] = ['CO_' . $deal['COMPANY_ID']];
+                    $c->bx('lists.element.update', [], [
+                        'IBLOCK_TYPE_ID' => 'lists',
+                        'IBLOCK_ID' => 41,
+                        'ELEMENT_ID' => $row['ID'],
+                        'FIELDS' => $params,
+                    ]);
                 }
             }
-    return '123';
+        }
 } elseif ($_REQUEST['document_id'][2]) {
     $params = [
         'IBLOCK_TYPE_ID' => 'lists',
@@ -169,7 +168,6 @@ if (isset($_REQUEST['event']) && $_REQUEST['event'] == 'ONCRMDEALUPDATE') {
             }
         }
     }
-
 }
 
 //mail('semyonchick@gmail.com', __FILE__, print_r($_REQUEST, 1));
