@@ -18,7 +18,12 @@ require_once __DIR__ . '/../core/server.php';
 
 $result = [];
 
-$mc = new Mailchimp('544989de47041bba5b5552e0310edac4-us14');
+$list = [
+    'holding-gel' => '1c3db67f2aaee2c39dd8937d5cdfcec9-us16',
+    'espanarusa' => '544989de47041bba5b5552e0310edac4-us14',
+];
+
+$mc = new Mailchimp($list[$domain]);
 
 if ($_POST['type'] == 'subscribed') {
     $result = $mc->request('lists/' . $_POST['listId'] . '/members/' . md5($_POST['email']), [
@@ -47,6 +52,9 @@ if ($_POST['type'] == 'subscribed') {
     }
 }
 
+usort($result, function ($a, $b) {
+    return $a['name'] > $b['name'];
+});
 
 header('Content-Type: application/json');
 echo json_encode([

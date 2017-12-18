@@ -33,11 +33,11 @@ ini_set('html_errors', true);
 
 header('Content-Type: text/plain; charset=utf-8');
 
-header('Access-Control-Allow-Origin: https://espanarusa.bitrix24.ru');
-header('Access-Control-Allow-Methods: POST');
+if ([preg_match('#([^\.\/]+)\.bitrix24\.ru#', $_SERVER['HTTP_REFERER'], $match)]) $domain = $match[1];
+elseif (!($domain = $_GET['id'] ?: $_POST['id'])) throw new Exception('Can`t find domain');
 
-//if (!($domain = $_GET['id'] ?: $_POST['id'])) throw new HttpException('Can`t find domain');
-$domain = 'espanarusa';
+header('Access-Control-Allow-Origin: https://'.$domain.'.bitrix24.ru');
+header('Access-Control-Allow-Methods: POST');
 
 $file = __DIR__ . '/../data/' . $domain . '/' . basename($_SERVER['SCRIPT_FILENAME'], '.php') . '.json';
 
