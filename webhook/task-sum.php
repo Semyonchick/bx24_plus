@@ -39,8 +39,8 @@ function sumChildTasks($taskIs, $bx)
             $params['UF_AUTO_965311856607'] = $task['UF_AUTO_813593154674'] - $task['UF_AUTO_378796169189'];
         }
 
-        if (array_diff($params, $task)) {
-            $bx->run('task.item.update', [], ['TASKID' => $task['ID'], 'TASKDATA' => $params]);
+        if ($paramsActual = array_diff($params, $task, [0])) {
+            $bx->run('task.item.update', [], ['TASKID' => $task['ID'], 'TASKDATA' => $paramsActual]);
         }
 
         if ($task['PARENT_ID']) sumChildTasks($task['PARENT_ID'], $bx);
@@ -49,7 +49,7 @@ function sumChildTasks($taskIs, $bx)
 
 if ($_POST['auth']['domain'] == 'holding-gel.bitrix24.ru' && in_array($_POST['auth']['application_token'], $tokens)) {
     if ($id = $_POST['data']['FIELDS_AFTER']['ID']) {
-        $bx = new BX24(['url' => 'https://holding-gel.bitrix24.ru/rest/112/5m56ebgk24ijxt0y/']);
+        $bx = new BX24(['url' => Config::$control['holding-gel']]);
         sumChildTasks($id, $bx);
         $result = true;
     }

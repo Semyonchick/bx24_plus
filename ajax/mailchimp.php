@@ -18,10 +18,7 @@ require_once __DIR__ . '/../core/server.php';
 
 $result = [];
 
-$list = [
-    'holding-gel' => '1c3db67f2aaee2c39dd8937d5cdfcec9-us16',
-    'espanarusa' => '544989de47041bba5b5552e0310edac4-us14',
-];
+$list = Config::$mailchimp;
 
 $mc = new Mailchimp($list[$domain]);
 

@@ -55,3 +55,5 @@ function setData($data)
     if (!file_exists(dirname($file))) mkdir(dirname($file), 0777, true);
     return file_put_contents($file, is_array($data) ? json_encode($data) : $data);
 }
+
+require_once __DIR__ . '/.config.php';

@@ -19,14 +19,9 @@ require_once __DIR__ . '/../core/server.php';
 $result = [];
 require_once __DIR__ . '/../core/commands/MegaplanController.php';
 
-$target = 'https://rere.bitrix24.ru/rest/9/hd7o331e53m7dgne/';
-
-foreach ([
-             45 => 'https://espanarusa.bitrix24.ru/rest/49/n7o1e5qd6w4ajolu/',
-             33 => 'https://holding-gel.bitrix24.ru/rest/112/mgjztu3pf7pyhf35/',
-         ] as $group => $source) {
+foreach (Config::$tasks as $group => $source) {
     $bxSource = new BX24(['url' => $source]);
-    $bxTarget = new BX24(['url' => $target]);
+    $bxTarget = new BX24(['url' => Config::$target]);
 
     $usersSource = [];
     foreach ($bxSource->run('user.get', ['ADMIN_MODE' => 'Y']) as $user)
