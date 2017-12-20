@@ -90,6 +90,7 @@ class BitrixController extends Controller
                         ($requisiteTo = $this->findRequisite($data[0]['ENTITY_ID'], ['ID'])) &&
                         ($bill = $this->selectBill(['UF_COMPANY_ID' => $requisiteFrom['ENTITY_ID'], 'UF_MYCOMPANY_ID' => $requisiteTo['ENTITY_ID'], 'PAYED' => 'N'], $price))) {
                         $this->payBill($bill, $price);
+                        $storage->removeMessage($msg->id);
                     }
                 }
             }
