@@ -12,6 +12,7 @@
  * setData();
  */
 
+use app\components\BX24;
 use Mailchimp\Mailchimp;
 
 require_once __DIR__ . '/../core/server.php';
@@ -29,6 +30,25 @@ if ($_POST['type'] == 'subscribed') {
         'status' => 'subscribed',
         'merge_fields' => !empty($_POST['fields']) ? $_POST['fields'] : ['FNAME' => ''],
     ], 'PUT')->toArray();
+
+    if ($params = $_POST['params']) {
+        $bx = new BX24(['url' => Config::$control[$domain]]);
+        $result = $bx->run('crm.livefeedmessage.add', [
+            'fields' => [
+                'POST_TITLE' => 'MailChimp subscribe',
+                'MESSAGE' => 'MailChimp подписка на ' . $params['LIST'],
+                'ENTITYTYPEID' => array_search($params['TYPE'], ['lead', 'deal', 'contact', 'company'])+1,
+                'ENTITYID' => $params['ID'],
+            ]
+        ]);
+
+        var_dump($result, [
+            'POST_TITLE' => 'MailChimp subscribe',
+            'MESSAGE' => 'MailChimp подписка на ' . $params['LIST'],
+            'ENTITYTYPEID' => array_search($params['TYPE'], ['lead', 'deal', 'contact', 'company']),
+            'ENTITYID' => $params['ID'],
+        ]);
+    }
 } else {
     $result = $mc->request('lists', [
         'fields' => 'lists.id,lists.name,lists.stats.member_count',
@@ -47,11 +67,11 @@ if ($_POST['type'] == 'subscribed') {
                 if ($value['id'] == $row['id']) $result[$key]['exist'] = true;
         }
     }
-}
 
-usort($result, function ($a, $b) {
-    return $a['name'] > $b['name'];
-});
+    usort($result, function ($a, $b) {
+        return $a['name'] > $b['name'];
+    });
+}
 
 header('Content-Type: application/json');
 echo json_encode([
