@@ -6,6 +6,8 @@
         "pacely/mailchimp-apiv3": "dev-master",
         "dotzero/yii2-amocrm": "^0.2.1",
         "linslin/yii2-curl": "*",
-        "afinogen89/get-mail": "dev-master"
+        "afinogen89/get-mail": "dev-master",
+        "roopz/yii2-imap": "dev-master",
+        "eden/mail": "^4.0"
     }
 }
