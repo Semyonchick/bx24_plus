@@ -10,7 +10,6 @@ namespace app\commands;
 use app\components\BX24;
 use Eden\Mail\Imap;
 use yii\console\Controller;
-use yii\helpers\Console;
 
 /**
  * @author Qiang Xue <qiang.xue@gmail.com>
@@ -21,6 +20,7 @@ class MailController extends Controller
     public $config = [];
 
     private $_bx;
+    private $_payBills = 0;
 
     public function init()
     {
@@ -56,26 +56,6 @@ class MailController extends Controller
         $imap->disconnect();
     }
 
-    public function actionBank()
-    {
-        $storage = new \afinogen89\getmail\storage\Pop3($this->config['mail']);
-
-        $count = $storage->countMessages();
-
-        Console::output($count);
-
-        for ($i = 0; $i < $count; $i++) {
-            $msg = $storage->getMessage($i + 1);
-            if ($msg->getHeaders()->getFrom() == 'bank@ubrr.ru' && $this->parseMail(strip_tags($msg->getMsgBody()))) {
-                $storage->removeMessage($msg->id);
-            }
-        }
-
-        Console::output('end');
-    }
-
-    private $_payBills = 0;
-
     public function parseMail($text, $emailId = false)
     {
         $this->_payBills = 0;
@@ -108,6 +88,7 @@ class MailController extends Controller
                 $this->toAdmin('Не найден плательщик ' . $from);
             }
 
+            // Регистрируем список
             return $this->bx('lists.element.add', [], [
                 'IBLOCK_TYPE_ID' => 'lists',
                 'IBLOCK_ID' => '45',
