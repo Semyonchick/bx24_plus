@@ -126,6 +126,7 @@ class MailController extends Controller
 
     public function selectBill($filter, $price)
     {
+        $filter['!%ACCOUNT_NUMBER'] = '#';
         $bills = $this->bx('crm.invoice.list', ['order' => ['ID' => 'ASC'], 'filter' => $filter, 'select' => ['ID', 'PRICE', 'UF_CRM_1513599139']]);
 
         // Ищем такую же сумму
