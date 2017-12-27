@@ -123,8 +123,11 @@ if (isset($_REQUEST['event']) && $_REQUEST['event'] == 'ONCRMDEALUPDATE') {
                 $deal = $c->bx('crm.' . array_search($match[1], $c->bxTypesMap) . '.get', ['id' => $match[2]]);
                 if ($deal['CONTACT_ID'] || $deal['COMPANY_ID']) {
                     $params['PROPERTY_205'] = $row['PROPERTY_205'];
-                    if ($deal['CONTACT_ID']) $params['PROPERTY_205'][] = ['C_' . $deal['CONTACT_ID']];
-                    if ($deal['COMPANY_ID']) $params['PROPERTY_205'][] = ['CO_' . $deal['COMPANY_ID']];
+                    foreach ($row['PROPERTY_209'] as $key => $val)
+                        foreach ($val as $i => $data)
+                            $params['PROPERTY_209'][$key] = $data;
+                    if ($deal['CONTACT_ID']) $params['PROPERTY_205'][] = 'C_' . $deal['CONTACT_ID'];
+                    if ($deal['COMPANY_ID']) $params['PROPERTY_205'][] = 'CO_' . $deal['COMPANY_ID'];
                     $c->bx('lists.element.update', [], [
                         'IBLOCK_TYPE_ID' => 'lists',
                         'IBLOCK_ID' => 41,
