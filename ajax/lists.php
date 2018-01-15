@@ -117,18 +117,18 @@ if (isset($_REQUEST['event']) && $_REQUEST['event'] == 'ONCRMDEALUPDATE') {
         'ELEMENT_ID' => $_REQUEST['document_id'][2],
     ]);
     $row = current($lists);
-    foreach ($row['PROPERTY_205'] as $value)
-        if (preg_match('#^(\w{1,2}_)?(\d+)$#i', $value, $match)) {
+
+    foreach ($row['PROPERTY_311'] as $value)
+        if (is_numeric($value) || preg_match('#^(\w{1,2}_)?(\d+)$#i', $value, $match)) {
+            if (is_numeric($value)) $match = [0, 'D_', $value];
+
             if ($match[1] == 'D_') {
                 $deal = $c->bx('crm.' . array_search($match[1], $c->bxTypesMap) . '.get', ['id' => $match[2]]);
                 if ($deal['CONTACT_ID'] || $deal['COMPANY_ID']) {
-                    $params['PROPERTY_205'] = $row['PROPERTY_205'];
-                    foreach ($row['PROPERTY_209'] as $key => $val)
-                        foreach ($val as $i => $data)
-                            $params['PROPERTY_209'][$key] = $data;
+                    $params = $row;
                     if ($deal['CONTACT_ID']) $params['PROPERTY_205'][] = 'C_' . $deal['CONTACT_ID'];
                     if ($deal['COMPANY_ID']) $params['PROPERTY_205'][] = 'CO_' . $deal['COMPANY_ID'];
-                    $c->bx('lists.element.update', [], [
+                    $save = $c->bx('lists.element.update', [], [
                         'IBLOCK_TYPE_ID' => 'lists',
                         'IBLOCK_ID' => 41,
                         'ELEMENT_ID' => $row['ID'],

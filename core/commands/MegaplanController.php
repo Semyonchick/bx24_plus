@@ -483,6 +483,7 @@ class MegaplanController extends Controller
 
             $result = json_decode($result, 1);
         } catch (Exception $e){
+            mail('semyonchick@gmail.com', 'bitrix error', print_r($e, 1));
             Console::output('bitrix error');
             sleep(1);
             return $this->bx($method, $get, $post);
@@ -491,6 +492,7 @@ class MegaplanController extends Controller
         if (!isset($result['result'])) {
             print_r($url);
             print_r($post);
+            mail('semyonchick@gmail.com', 'bitrix error data', print_r($result, 1));
             throw new Exception(print_r($result, 1));
         }
 
