@@ -84,12 +84,14 @@ class MailController extends Controller
             if ($i && preg_match_all('#(.+)\=(.+)#', $row, $matches)) {
                 $data = array_combine($matches[1], array_map('trim', $matches[2]));
 
-                if (!($requisiteFrom = $this->findRequisite($data['ПлательщикИНН'])))
-                    $this->toAdmin('Не найден плательщик');
-                if (!($requisiteTo = $this->findRequisite($data['ПолучательИНН'])))
-                    $this->toAdmin('Не найден получатель');
+                if($data['ДатаПоступило']){
+                    if (!($requisiteFrom = $this->findRequisite($data['ПлательщикИНН'])))
+                        $this->toAdmin('Не найден плательщик');
+                    if (!($requisiteTo = $this->findRequisite($data['ПолучательИНН'])))
+                        $this->toAdmin('Не найден получатель');
 
-                $result[] = $this->addData($data['Плательщик'], $data['Дата'], $data['Сумма'], $requisiteFrom['ENTITY_ID'], $requisiteTo['ENTITY_ID'], $emailId);
+                    $result[] = $this->addData($data['Плательщик'], $data['ДатаПоступило'], $data['Сумма'], $requisiteFrom['ENTITY_ID'], $requisiteTo['ENTITY_ID'], $emailId);
+                }
             }
         }
         return $result;
