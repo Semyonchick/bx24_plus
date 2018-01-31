@@ -492,7 +492,7 @@ class MegaplanController extends Controller
         if (!isset($result['result'])) {
             print_r($url);
             print_r($post);
-            mail('semyonchick@gmail.com', 'bitrix error data', print_r($result, 1));
+            mail('semyonchick@gmail.com', 'bitrix error data', print_r([$result,$method, $get,$post], 1));
             throw new Exception(print_r($result, 1));
         }
 

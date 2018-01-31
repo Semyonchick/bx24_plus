@@ -54,7 +54,10 @@ class MailController extends Controller
                     if ($text) break;
                 }
                 $result = $this->parse1CFile($text, $email['uid']);
-                if ($result) \Yii::$app->cache->set($cacheId, $result, 86400 * 365);
+                if ($result) {
+                    $this->actionCheckData();
+                    \Yii::$app->cache->set($cacheId, $result, 86400 * 7);
+                }
             }
         }
 
@@ -65,13 +68,16 @@ class MailController extends Controller
             if ($result === false) {
                 $text = iconv('koi8-r', 'utf8', $email['body']['text/plain']);
                 $result = $this->parseMail($text, $email['uid']);
-                if ($result) \Yii::$app->cache->set($cacheId, $result, 86400 * 365);
+                if ($result) {
+                    $this->actionCheckData();
+                    \Yii::$app->cache->set($cacheId, $result, 86400 * 7);
+                }
             }
         }
 
         $imap->disconnect();
 
-        if (var_dump(date('i')) == '33') {
+        if (date('i') == 33) {
             $this->actionCheckData();
         }
     }
@@ -80,11 +86,12 @@ class MailController extends Controller
     {
         $result = [];
         foreach (explode('СекцияДокумент=Платежное поручение', $text) as $i => $row) {
+            $emailId .= $i;
             if ($this->getData($emailId)) continue;
             if ($i && preg_match_all('#(.+)\=(.+)#', $row, $matches)) {
                 $data = array_combine($matches[1], array_map('trim', $matches[2]));
 
-                if($data['ДатаПоступило']){
+                if ($data['ДатаПоступило']) {
                     if (!($requisiteFrom = $this->findRequisite($data['ПлательщикИНН'])))
                         $this->toAdmin('Не найден плательщик');
                     if (!($requisiteTo = $this->findRequisite($data['ПолучательИНН'])))
@@ -206,33 +213,6 @@ class MailController extends Controller
             $this->toAdmin('Не удалось оплатить счет ' . $bill['ID'] . ' на сумму ' . $pay);
     }
 
-    public function parseMail($text, $emailId = false)
-    {
-        if (preg_match('#(\d{2}\.\d{2}\.\d{2}\s\d{2}\:\d{2}).+(\d{20}).+?\s([\d\s\.]+)\s.+\n?От:\s(.+?)(?:(?:р\/с|Р\/С).+)?\n?Ostatok po schetu#iu', $text, $match)) {
-            if ($this->getData($emailId)) return true;
-
-            list(, $date, $bill, $price, $from) = $match;
-            $price = (float)str_replace(' ', '', $price);
-
-            $requisiteTo = \Yii::$app->cache->get($bill);
-            if ($requisiteTo === false) {
-                $requisiteTo = ($data = $this->bx('crm.requisite.bankdetail.list', ['filter' => ['RQ_ACC_NUM' => $bill], 'select' => ['ENTITY_ID']])) ? $this->findRequisite($data[0]['ENTITY_ID'], ['ID']) : null;
-                if (!$requisiteTo) {
-                    $this->toAdmin('Не найден счет получателя ' . $bill);
-                } else {
-                    \Yii::$app->cache->set($bill, $requisiteTo, 86400);
-                }
-            }
-
-            if (!($requisiteFrom = $this->findRequisite($from))) {
-                $this->toAdmin('Не найден плательщик ' . $from);
-            }
-
-            return $this->addData($from, preg_replace('#\.(\d{2})\s#', '.20$1 ', $date), $price, $requisiteFrom['ENTITY_ID'], $requisiteTo['ENTITY_ID'], $emailId);
-        }
-        return false;
-    }
-
     public function actionCheckData()
     {
         $forPay = [];
@@ -268,5 +248,32 @@ class MailController extends Controller
                 }
             }
         }
+    }
+
+    public function parseMail($text, $emailId = false)
+    {
+        if (preg_match('#(\d{2}\.\d{2}\.\d{2}\s\d{2}\:\d{2}).+(\d{20}).+?\s([\d\s\.]+)\s.+\n?От:\s(.+?)(?:(?:р\/с|Р\/С).+)?\n?Ostatok po schetu#iu', $text, $match)) {
+            if ($this->getData($emailId)) return true;
+
+            list(, $date, $bill, $price, $from) = $match;
+            $price = (float)str_replace(' ', '', $price);
+
+            $requisiteTo = \Yii::$app->cache->get($bill);
+            if ($requisiteTo === false) {
+                $requisiteTo = ($data = $this->bx('crm.requisite.bankdetail.list', ['filter' => ['RQ_ACC_NUM' => $bill], 'select' => ['ENTITY_ID']])) ? $this->findRequisite($data[0]['ENTITY_ID'], ['ID']) : null;
+                if (!$requisiteTo) {
+                    $this->toAdmin('Не найден счет получателя ' . $bill);
+                } else {
+                    \Yii::$app->cache->set($bill, $requisiteTo, 86400);
+                }
+            }
+
+            if (!($requisiteFrom = $this->findRequisite($from))) {
+                $this->toAdmin('Не найден плательщик ' . $from);
+            }
+
+            return $this->addData($from, preg_replace('#\.(\d{2})\s#', '.20$1 ', $date), $price, $requisiteFrom['ENTITY_ID'], $requisiteTo['ENTITY_ID'], $emailId);
+        }
+        return false;
     }
 }
