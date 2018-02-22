@@ -10,7 +10,7 @@ if (location.host === 'espanarusa.bitrix24.ru') {
 } else if (location.host === 'holding-gel.bitrix24.ru') {
     requirejs.config({
         baseUrl: 'https://smartsam.ru/bx24_plus/lib',
-        urlArgs: "v=20171218-1039"
+        urlArgs: "v=20180222-1554"
     });
 
     requirejs(['filter']);
