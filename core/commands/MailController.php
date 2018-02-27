@@ -85,7 +85,8 @@ class MailController extends Controller
     public function parse1CFile($text, $emailId = false)
     {
         $result = [];
-        foreach (explode('СекцияДокумент=', $text) as $i => $row) {
+        foreach (explode('СекцияДокумент=Платежное поручение', $text) as $i => $row) {
+            $row = explode('КонецДокумента', $row)[0];
             $emailId .= $i;
             if ($this->getData($emailId)) continue;
             if ($i && preg_match_all('#(.+)\=(.+)#', $row, $matches)) {
