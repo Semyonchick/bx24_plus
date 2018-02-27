@@ -48,7 +48,7 @@ class MailController extends Controller
         Console::output('tinkoff: ' . count($emails));
         foreach ($emails as $email) foreach ($email['attachment'] as $attach) if ($attach['text/plain']) {
             $result = \Yii::$app->cache->get($cacheId = 'mail' . $email['uid']);
-            if (1 || $result === false) {
+            if ($result === false) {
                 foreach (['cp1251', 'koi8-r'] as $fromEncode) {
                     $text = iconv($fromEncode, 'utf8', $attach['text/plain']);
                     if ($text) break;
@@ -56,7 +56,7 @@ class MailController extends Controller
                 $result = $this->parse1CFile($text, $email['uid']);
                 if ($result) {
                     $this->actionCheckData();
-                    \Yii::$app->cache->set($cacheId, $result, 86400 * 7);
+                    \Yii::$app->cache->set($cacheId, $result, 86400 * 3);
                 }
             }
         }
@@ -70,7 +70,7 @@ class MailController extends Controller
                 $result = $this->parseMail($text, $email['uid']);
                 if ($result) {
                     $this->actionCheckData();
-                    \Yii::$app->cache->set($cacheId, $result, 86400 * 7);
+                    \Yii::$app->cache->set($cacheId, $result, 86400 * 3);
                 }
             }
         }
