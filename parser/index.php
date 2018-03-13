@@ -9,6 +9,7 @@
 error_reporting(E_ALL ^ E_NOTICE ^ E_STRICT);
 ini_set('display_errors', 1);
 ini_set('html_errors', 1);
+ob_implicit_flush(1);
 
 use PHPHtmlParser\Dom;
 
@@ -66,10 +67,8 @@ class Parser
 
             $list = $dom->find('#cat-list .catalog-list-item h5 a');
             if (count($list) > 1) {
-                var_dump($urls);
-                var_dump($url);
-                var_dump($list);
-                die();
+                var_dump(count($list), $url);
+                continue;
             }
             /** @var DOMElement $a */
             foreach ($list as $a) {
@@ -142,5 +141,7 @@ class Parser
 
         print_r($url);
         print_r($result);
+
+        return $result;
     }
 }
