@@ -61,6 +61,7 @@ class Parser
         print_r('---' . PHP_EOL . $data['name'] . PHP_EOL);
         $urls = [];
         if ($data['art'] && $data['art'] != '(к/к)') $urls[] = strtr(self::$url, ['{q}' => urlencode($data['art'])]);
+        if (preg_match('#\s([\d]{4,10})$#iu', $data['name'], $match)) $urls[] = strtr(self::$url, ['{q}' => urlencode($match[1])]);
         $urls[] = strtr(self::$url, ['{q}' => urlencode($data['name'])]);
 
         foreach ($urls as $url) {
@@ -72,8 +73,9 @@ class Parser
             // Если найдено много определяем схожесть и удаляем непохожие
             if ($list->count() > 1) {
                 foreach ($list as $key => $a) {
-                    similar_text($data['name'], $a->text, $percent = 0);
-                    if ($percent < 70) unset($list[$key]);
+                    $percent = 0;
+                    similar_text($data['name'], $a->text, $percent);
+                    if ($percent < 50) unset($list[$key]);
                 }
             }
 
@@ -85,24 +87,22 @@ class Parser
 
         // ищем по гуглу
         $url = 'https://www.google.ru/search?q=' . urlencode($data['name']) . '+site%3Aavselectro.ru';
+        print_r($url . PHP_EOL);
         $dom = self::getUrl($url);
         $dom->load(iconv('cp1251', 'utf8', $dom->innerHtml));
 
         /** @var Dom\Collection $list */
         $list = $dom->find('h3 a');
 
-        /** @var Dom\Tag $a */
+        /** @var Dom\TextNode $a */
         foreach ($list as $a) {
-            similar_text($data['name'], explode(' | ', trim($a->text, '. '))[0], $percent = 0);
-            if ($percent > 70)
-                return self::get($a->getAttribute('href'), $data);
+            $text = explode(' | ', trim($a->text, '. '))[0];
+            $percent = 0;
+            similar_text($data['name'], $text, $percent);
+            print_r($percent . ' ' . $text . PHP_EOL);
+            if ($percent > 70 && preg_match('#?q=(.+)&amp;sa=#', $a->getAttribute('href'), $match))
+                return self::get($match[1], $data);
         }
-
-        if (self::$count++ > 100) {
-            die;
-        }
-
-        flush();
     }
 
     static function getUrl($url)
@@ -143,11 +143,13 @@ class Parser
     static function get($url, $data)
     {
         $dom = self::getUrl($url);
+        return;
+
         $result = $data + [
                 'наименование' => $dom->find('h1')[0]->text,
                 'цена' => $dom->find('.upl-price')[0]->text,
                 'старая цена' => $dom->find('.item-card-price mark')[0]->text,
-                'описание' => $dom->find('.prod-descr')[0]->innetHtml,
+                'описание' => trim($dom->find('.prod-descr')[0]->innerHtml),
             ];
 
         foreach ($dom->find('.breadcrumbs a') as $i => $row) {
@@ -169,7 +171,7 @@ class Parser
         foreach ($dom->find('.article .char-name') as $i => $row)
             $result[trim(str_replace(':&nbsp;', ' ', $row->text))] = $dom->find('.article .char-param')[$i]->text;
 
-        print_r($url);
+        print_r($url . PHP_EOL);
         print_r($result);
 
         return $result;
