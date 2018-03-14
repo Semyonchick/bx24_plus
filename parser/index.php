@@ -83,8 +83,6 @@ class Parser
             }
         }
 
-        sleep(15);
-
         // ищем по гуглу
         $url = 'https://www.google.ru/search?q=' . urlencode($data['name']) . '+site%3Aavselectro.ru';
         $dom = self::getUrl($url);
@@ -116,6 +114,7 @@ class Parser
 
         $html = self::getCache($url);
         if (!$html) {
+            sleep(5);
             $dom->load($url);
             self::setCache($url, $dom->innerHtml);
         } else {
@@ -148,6 +147,7 @@ class Parser
                 'наименование' => $dom->find('h1')[0]->text,
                 'цена' => $dom->find('.upl-price')[0]->text,
                 'старая цена' => $dom->find('.item-card-price mark')[0]->text,
+                'описание' => $dom->find('.prod-descr')[0]->innetHtml,
             ];
 
         foreach ($dom->find('.breadcrumbs a') as $i => $row) {
