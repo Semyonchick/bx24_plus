@@ -37,6 +37,9 @@ class Parser
 
     static function file($path)
     {
+        $saveFile = __DIR__ . '/parses.txt';
+        if (file_exists($saveFile)) unlink($saveFile);
+
         $headers = self::$headers ?: [];
         if (($handle = fopen($path, "r")) !== false) {
             while (($data = fgetcsv($handle, 0, ";")) !== false) {
@@ -49,7 +52,10 @@ class Parser
                 if (empty($headers)) {
                     $headers = $data;
                 } else {
-                    self::find(array_combine($headers, $data));
+                    $data = self::find(array_combine($headers, $data));
+                    if ($data) {
+                        file_put_contents($saveFile, serialize($data), FILE_APPEND);
+                    }
                 }
             }
         }
@@ -143,7 +149,6 @@ class Parser
     static function get($url, $data)
     {
         $dom = self::getUrl($url);
-        return;
 
         $result = $data + [
                 'наименование' => $dom->find('h1')[0]->text,
@@ -156,6 +161,7 @@ class Parser
             if ($i) $result['категория ' . $i] = $row->text;
         }
 
+        /** @var $row Dom\InnerNode */
         foreach ($dom->find('.item-label span') as $row) {
             if (($i = $row->find('i')) && count($i)) {
                 $key = trim(str_replace($i[0]->outerHtml, '', $row->innerHtml));
@@ -170,9 +176,6 @@ class Parser
 
         foreach ($dom->find('.article .char-name') as $i => $row)
             $result[trim(str_replace(':&nbsp;', ' ', $row->text))] = $dom->find('.article .char-param')[$i]->text;
-
-        print_r($url . PHP_EOL);
-        print_r($result);
 
         return $result;
     }
