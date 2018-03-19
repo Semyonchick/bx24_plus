@@ -54,7 +54,7 @@ class Parser
                 } else {
                     $data = self::find(array_combine($headers, $data));
                     if ($data) {
-                        file_put_contents($saveFile, serialize($data), FILE_APPEND);
+                        file_put_contents($saveFile, serialize($data) . PHP_EOL, FILE_APPEND);
                     }
                 }
             }
