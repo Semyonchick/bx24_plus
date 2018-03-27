@@ -151,11 +151,21 @@ class Parser
         $dom = self::getUrl($url);
 
         $result = $data + [
+                'ссылка' => $url,
                 'наименование' => $dom->find('h1')[0]->text,
                 'цена' => $dom->find('.upl-price')[0]->text,
                 'старая цена' => $dom->find('.item-card-price mark')[0]->text,
                 'описание' => trim($dom->find('.prod-descr')[0]->innerHtml),
+                'фото' => $dom->find('.item-card-img a')[0]->href,
             ];
+
+        if ($result['фото']) {
+            $to = __DIR__ . '/data' . $result['фото'];
+            if (!file_exists($to)) {
+                if (!file_exists(dirname($to))) mkdir(dirname($to), 0777, true);
+                copy('https://avselectro.ru' . $result['фото'], __DIR__ . '/data' . $result['фото']);
+            }
+        }
 
         foreach ($dom->find('.breadcrumbs a') as $i => $row) {
             if ($i) $result['категория ' . $i] = $row->text;
