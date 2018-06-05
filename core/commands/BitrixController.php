@@ -7,6 +7,8 @@
 
 namespace app\commands;
 
+use app\components\BX24;
+use Config;
 use linslin\yii2\curl\Curl;
 use yii\console\Controller;
 use yii\console\Exception;
@@ -23,13 +25,13 @@ class BitrixController extends Controller
 
     public function actionIndex($skipErrors = true)
     {
-        $data = $this->bx('crm.contact.list', ['filter'=>['ASSIGNED_BY_ID' => 12, '!=CREATED_BY_ID' => 12]]);
+        $data = $this->bx('crm.contact.list', ['filter' => ['ASSIGNED_BY_ID' => 12, '!=CREATED_BY_ID' => 12]]);
 
         foreach ($data as $row) if ($row['ASSIGNED_BY_ID'] != $row['CREATED_BY_ID']) {
-            $this->bx('crm.contact.update', ['id'=>$row['ID'], 'fields'=>['ASSIGNED_BY_ID' => $row['CREATED_BY_ID']]]);
+            $this->bx('crm.contact.update', ['id' => $row['ID'], 'fields' => ['ASSIGNED_BY_ID' => $row['CREATED_BY_ID']]]);
         }
 
-        if(count($data)) $this->actionIndex();
+        if (count($data)) $this->actionIndex();
     }
 
     public function bx($method, $get = null, $post = null)
@@ -69,5 +71,38 @@ class BitrixController extends Controller
         $this->bxLog[] = microtime(true);
 
         return $result['result'];
+    }
+
+    public function actionSetYesIfDealExist()
+    {
+        $bx = new BX24(['url' => Config::$control['holding-gel']]);
+        $i = 0;
+        $ids = [];
+        while (($data = $bx->run('crm.deal.list', ['order'=>['ID'=>'DESC'], 'select' => ['CONTACT_ID', 'COMPANY_ID'], 'start' => 50 * $i])) && count($data)) {
+            $i++;
+            Console::output('--' . $data[0]['ID']);
+            foreach ($data as $row) {
+                if ($row['CONTACT_ID']) $ids['contact'][$row['CONTACT_ID']] = $row['CONTACT_ID'];
+                if ($row['COMPANY_ID']) $ids['company'][$row['COMPANY_ID']] = $row['COMPANY_ID'];
+            }
+
+            if ($i % 10 == 0) {
+                Console::output($i);
+                foreach ($ids as $type => $values) {
+                    foreach ($values as $id) {
+                        $field = [
+//                            'contact' => 'UF_CRM_1527664648',
+                            'company' => 'UF_CRM_1527664648',
+                        ];
+                        if($field[$type]) {
+                            Console::output($type . '-' . $id);
+                            $bx->run('crm.' . $type . '.update', ['id' => $id, 'fields' => [$field[$type] => 1]]);
+                        }
+                    }
+                }
+                $ids = [];
+                sleep(10);
+            }
+        }
     }
 }

@@ -108,6 +108,8 @@ function bx_contact_price_update($type, $id)
     }
 }
 
+return;
+
 if (isset($_REQUEST['event']) && $_REQUEST['event'] == 'ONCRMDEALUPDATE') {
     bx_deal_prices_update('deal', $_REQUEST['data']['FIELDS']['ID']);
 } elseif (!empty($_REQUEST['crm'])) {
