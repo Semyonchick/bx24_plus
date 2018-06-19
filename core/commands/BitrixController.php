@@ -78,30 +78,28 @@ class BitrixController extends Controller
         $bx = new BX24(['url' => Config::$control['holding-gel']]);
         $i = 0;
         $ids = [];
-        while (($data = $bx->run('crm.deal.list', ['order'=>['ID'=>'DESC'], 'select' => ['CONTACT_ID', 'COMPANY_ID'], 'start' => 50 * $i])) && count($data)) {
+        while (($data = $bx->run('crm.deal.list', ['order' => ['ID' => 'DESC'], 'select' => ['CONTACT_ID', 'COMPANY_ID', 'STAGE_ID'], 'start' => 50 * $i])) && count($data)) {
             $i++;
             Console::output('--' . $data[0]['ID']);
             foreach ($data as $row) {
-                if ($row['CONTACT_ID']) $ids['contact'][$row['CONTACT_ID']] = $row['CONTACT_ID'];
-                if ($row['COMPANY_ID']) $ids['company'][$row['COMPANY_ID']] = $row['COMPANY_ID'];
+                if ($row['CONTACT_ID'] && !$ids['contact'][$row['CONTACT_ID']]) $ids['contact'][$row['CONTACT_ID']] = $row['STAGE_ID'] == 'WON';
+                if ($row['COMPANY_ID'] && !$ids['contact'][$row['COMPANY_ID']]) $ids['contact'][$row['COMPANY_ID']] = $row['STAGE_ID'] == 'WON';
             }
+            if ($i > 100) break;
+            if ($i % 10 == 0) sleep(10);
+        }
 
-            if ($i % 10 == 0) {
-                Console::output($i);
-                foreach ($ids as $type => $values) {
-                    foreach ($values as $id) {
-                        $field = [
-//                            'contact' => 'UF_CRM_1527664648',
-                            'company' => 'UF_CRM_1527664648',
-                        ];
-                        if($field[$type]) {
-                            Console::output($type . '-' . $id);
-                            $bx->run('crm.' . $type . '.update', ['id' => $id, 'fields' => [$field[$type] => 1]]);
-                        }
-                    }
+        Console::output($i);
+        foreach ($ids as $type => $values) {
+            foreach ($values as $id => $value) {
+                $field = [
+                    'contact' => 'UF_CRM_1527664648',
+                    'company' => 'UF_CRM_1527664648',
+                ];
+                if ($field[$type]) {
+                    Console::output($type . '-' . $id);
+                    $bx->run('crm.' . $type . '.update', ['id' => $id, 'fields' => [$field[$type] => $value]]);
                 }
-                $ids = [];
-                sleep(10);
             }
         }
     }
