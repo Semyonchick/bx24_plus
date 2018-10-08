@@ -14,6 +14,8 @@
 
 use app\components\BX24;
 
+mail('semyonchick@gmail.com', 'WorkTrack', print_r([$_GET], 1));
+
 require_once __DIR__ . '/../core/server.php';
 
 // приводим к нужному форму пришедшие данные
@@ -22,8 +24,6 @@ $postJSON = file_get_contents('php://input');
 $result = [];
 
 $bx = new BX24(['url' => Config::$timeman[$_GET['c']]]);
-
-$result += $_GET;
 
 $users = [
     'semyonchick' => '9',
@@ -59,7 +59,6 @@ if ($_GET['s'] == 'logoff') {
 }
 
 mail('semyonchick@gmail.com', 'WorkTrack', print_r([$_GET, $data, $result], 1));
-
 
 header('Content-Type: application/json');
 echo json_encode([
