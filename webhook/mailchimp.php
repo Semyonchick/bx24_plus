@@ -17,7 +17,7 @@ $postJSON = file_get_contents('php://input');
 
 $result = [];
 
-mail('semyonchick@gmail.com', 'mailChimp', print_r([$_REQUEST, $_POST, $postJSON], 1));
+//mail('semyonchick@gmail.com', 'mailChimp', print_r([$_REQUEST, $_POST, $postJSON], 1));
 
 header('Content-Type: application/json');
 echo json_encode([
