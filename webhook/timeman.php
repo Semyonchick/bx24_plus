@@ -34,7 +34,7 @@ $users = [
 $data = [
     'USER_ID' => $users[$_GET['u']],
     'REPORT' => 'from server api',
-//    'TIME' => str_replace('00:00', '05:00', date('c', strtotime($_GET['d']))),
+    'TIME' => str_replace('00:00', '05:00', date('c', strtotime($_GET['d']))),
 ];
 
 if ($_GET['ip']) {
