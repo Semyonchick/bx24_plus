@@ -35,7 +35,7 @@ class TimeManController extends Controller
         foreach ($users as $user) {
             $data = $this->bx('timeman.status', ['USER_ID' => $user['ID']]);
             if (in_array($data['STATUS'], ['PAUSED', 'EXPIRED'])) {
-                $result = $this->bx('timeman.close', ['USER_ID' => $user['ID'], 'TIME' => $data['TIME_FINISH'], 'REPORT' => 'from server api control']);
+                $result = $this->bx('timeman.close', ['USER_ID' => $user['ID'], 'TIME' => $data['TIME_FINISH']?:$data['TIME_FINISH_DEFAULT'], 'REPORT' => 'from server api control']);
                 Console::output(print_r($result, 1));
             }
         }
