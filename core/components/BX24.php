@@ -64,7 +64,7 @@ class BX24 extends Component
 
         try {
             $curl = new Curl();
-            if ($post) {
+            if ($post && is_array($post)) {
                 $curl->setPostParams($post);
                 $result = $curl->post($url, true);
             } else {

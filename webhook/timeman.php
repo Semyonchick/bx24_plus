@@ -30,11 +30,15 @@ $users = [
     'elokhov' => '56',
     'shigabuga' => '104',
 ];
+$user = $users[$_GET['u']];
+
+if(!$user)
+    mail('semyonchick@gmail.com', 'WorkTrack Error', print_r([$_GET], 1));
 
 $data = [
-    'USER_ID' => $users[$_GET['u']],
+    'USER_ID' => $user,
     'REPORT' => 'from server api',
-    'TIME' => str_replace('00:00', '05:00', date('c', strtotime($_GET['d']))),
+//    'TIME' => str_replace('00:00', '05:00', date('c', strtotime($_GET['d']))),
 ];
 
 if ($_GET['ip']) {
@@ -51,11 +55,15 @@ if ($_GET['ip']) {
     $data['IP_OPEN'] = $_GET['ip'];
 }
 
-if ($_GET['s'] == 'logon') {
-    $result = $bx->run('timeman.open', $data);
-}
-if ($_GET['s'] == 'logoff') {
-    $result = $bx->run('timeman.pause', $data);
+try {
+    if ($_GET['s'] == 'logon') {
+        $result = $bx->run('timeman.open', $data);
+    }
+    if ($_GET['s'] == 'logoff') {
+        $result = $bx->run('timeman.pause', $data);
+    }
+} catch (Exception $e){
+    mail('semyonchick@gmail.com', 'WorkTrack Error', print_r([$_GET, $data, $result, $e->getMessage()], 1));
 }
 
 mail('semyonchick@gmail.com', 'WorkTrack', print_r([$_GET, $data, $result], 1));
