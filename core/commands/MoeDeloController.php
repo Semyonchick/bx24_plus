@@ -22,12 +22,33 @@ class MoeDeloController extends Controller
     public $config = [];
     private $key = 'eb027a65-4807-480c-9921-178363c38dbe';
 
+//    public function actionFix() {
+//        $bx = new BX24(['url' => \Config::$control['rere']]);
+//        $bills = $bx->run('crm.invoice.list', ['filter' => ['UF_MYCOMPANY_ID' => 193, '!=UF_CRM_1539972908' => false], 'select'=>['UF_CRM_1539972908']]);
+//
+//        $contracts = $this->run('/contract/api/v1/contract');
+//        $settlemts = $this->run('/requisites/api/v1/SettlementAccount');
+//        foreach ($bills as $bill) {
+//            $model = $this->run('/accounting/api/v1/sales/bill/' . $bill['UF_CRM_1539972908']);
+//            $row = $this->run('/kontragents/api/v1/kontragent/' . $model['KontragentId']);
+//
+//            $model['ProjectId'] = $row['SubcontoId'];
+//            unset($model['IsCovered']);
+//            $add = $this->run('/accounting/api/v1/sales/bill/' . $bill['UF_CRM_1539972908'], $model, 'put');
+//        }
+//    }
+
     public function actionIndex()
     {
         $fieldCode = 'UF_CRM_1539972908';
         $bx = new BX24(['url' => \Config::$control['rere']]);
         $bills = $bx->run('crm.invoice.list', ['filter' => ['UF_MYCOMPANY_ID' => 193, $fieldCode => false]]);
-        $nomenclature = $this->run('/stock/api/v1/nomenclature');
+//        $nomenclature = $this->run('/stock/api/v1/nomenclature');
+        $contracts = $this->run('/contract/api/v1/contract');
+        $settlemts = $this->run('/requisites/api/v1/SettlementAccount');
+        var_dump($contracts);
+        var_dump($settlemts);
+        die;
         foreach ($bills as $bill) {
             $find = $this->run('/accounting/api/v1/sales/bill', ['number' => $bill['ACCOUNT_NUMBER']]);
             if (count($find)) continue;
@@ -79,6 +100,8 @@ class MoeDeloController extends Controller
                     "DocDate" => $bill['DATE_BILL'],
                     "Type" => 1,
                     "Status" => 4,
+                    "ProjectId" => current($contracts)['Id']?:6454056,
+                    "SettlementAccountId" => current($settlemts)['Id'],
                     "KontragentId" => $client['Id'],
                     "DeadLine" => $bill['DATE_PAY_BEFORE'],
                     "AdditionalInfo" => trim($bill['COMMENT'] . "\r\n" . $bill['USER_DESCRIPTION']),
@@ -117,6 +140,7 @@ class MoeDeloController extends Controller
 
         if (isset($result['ResourceList'])) return $result['ResourceList'];
         if ($result['Message']) {
+            print_r($url);
             print_r($data);
             print_r($result);
             throw new Exception($result['Message']);
