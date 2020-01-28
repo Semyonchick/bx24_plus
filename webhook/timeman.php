@@ -14,7 +14,7 @@
 
 use app\components\BX24;
 
-mail('semyonchick@gmail.com', 'WorkTrack', print_r([$_GET], 1));
+//mail('semyonchick@gmail.com', 'WorkTrack', print_r([$_GET], 1));
 
 require_once __DIR__ . '/../core/server.php';
 
@@ -66,7 +66,7 @@ try {
     mail('semyonchick@gmail.com', 'WorkTrack Error', print_r([$_GET, $data, $result, $e->getMessage()], 1));
 }
 
-mail('semyonchick@gmail.com', 'WorkTrack', print_r([$_GET, $data, $result], 1));
+//mail('semyonchick@gmail.com', 'WorkTrack', print_r([$_GET, $data, $result], 1));
 
 header('Content-Type: application/json');
 echo json_encode([

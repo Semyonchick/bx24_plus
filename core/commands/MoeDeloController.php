@@ -38,6 +38,30 @@ class MoeDeloController extends Controller
 //        }
 //    }
 
+    public function actionExport() {
+        $bx = new BX24(['url' => \Config::$control['rere']]);
+
+        $bills = $bx->run('crm.invoice.list', ['filter' => ['UF_MYCOMPANY_ID' => 193, 'UF_CRM_1539972908' => false]]);
+        $url = 'https://moedelo.smartsam.ru/bill/add/';
+        $params = [
+            'DOMAIN'=>'rere.bitrix24.ru',
+            'AUTH_ID'=>'jrt795cbly5zcrxj'
+        ];
+        var_dump(count($bills));
+        while ($bx->next) {
+            foreach($bills as $row) {
+                $result = file_get_contents($url . '?' . http_build_query($params + ['PLACEMENT_OPTIONS'=>json_encode(['ID'=>$row['ID']])]));
+                var_dump($row['ID'], $url . '?' . http_build_query($params, ['PLACEMENT_OPTIONS'=>json_encode(['ID'=>$row['ID']])]), $result);
+                die;
+                sleep(1);
+            }
+            $bills = $bx->run('crm.invoice.list', ['filter' => ['UF_MYCOMPANY_ID' => 193, 'UF_CRM_1539972908' => false], 'start'=>$bx->next]);
+            var_dump(count($bills));
+            die;
+        }
+        var_dump(count($bills));
+    }
+
     public function actionIndex()
     {
         $fieldCode = 'UF_CRM_1539972908';

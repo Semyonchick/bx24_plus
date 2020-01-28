@@ -1,7 +1,4 @@
 {
-  "background": {
-    "page": "background.html"
-  },
   "manifest_version": 2,
   "content_scripts": [
     {
@@ -9,7 +6,8 @@
         "bx24Plus.user.js"
       ],
       "matches": [
-        "https://*.bitrix24.ru/*"
+        "https://*.bitrix24.ru/*",
+        "https://*.bitrix24.kz/*"
       ],
       "all_frames": true,
       "run_at": "document_end"
@@ -18,8 +16,7 @@
   "description": "Система расширений для CRM Bitrix24",
   "name": "Bx24Plus",
   "permissions": [
-    "http://*/*",
-    "unlimitedStorage"
+    "activeTab"
   ],
   "version": "1.0.0"
 }
