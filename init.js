@@ -19,7 +19,16 @@ if (location.host === 'espanarusa.bitrix24.ru') {
 } else if (location.host === 'asiatechno.bitrix24.kz') {
     requirejs.config({
         baseUrl: 'https://smartsam.ru/bx24_plus/lib',
-        urlArgs: "v=20180222-1554"
+        urlArgs: "v=20200130-0"
+    });
+
+    requirejs(['lists_sum_v2']);
+
+    console.log('bx24_plus init');
+} else if (location.host === 'rere.bitrix24.ru') {
+    requirejs.config({
+        baseUrl: 'https://smartsam.ru/bx24_plus/lib',
+        urlArgs: "v=20200130-0"
     });
 
     requirejs(['lists_sum_v2']);
